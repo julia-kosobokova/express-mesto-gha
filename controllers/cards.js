@@ -50,6 +50,12 @@ module.exports.deleteCardId = (req, res) => {
       return res.status(SUCCESS).send({ data: card });
     })
     .catch((err) => {
+      if (err.name === "ValidationError" || err.name === "CastError") {
+        res
+          .status(VALIDATION_ERROR)
+          .send({ message: `Переданы некорректные данные: ${err}` });
+        return;
+      }
       res
         .status(SERVER_ERROR)
         .send({ message: `На сервере произошла ошибка ${err}` });
