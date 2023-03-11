@@ -6,15 +6,6 @@ const VALIDATION_ERROR = 400;
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
 
-class UserNotFound extends Error {
-  constructor() {
-    super();
-    this.status = NOT_FOUND;
-    this.message = "Пользователь не найден";
-    this.name = this.constructor.name;
-  }
-}
-
 // Поиск всех пользователей
 module.exports.findUsers = (req, res) => {
   User.find({})
@@ -29,13 +20,18 @@ module.exports.findUsers = (req, res) => {
 // Поиск пользователя по Id
 module.exports.findUserId = (req, res) => {
   User.findById(req.params.userId)
-    .orFail(() => {
-      throw new UserNotFound();
-    })
-    .then((user) => res.status(SUCCESS).send({ data: user }))
-    .catch((err) => {
-      if (err.name === "UserNotFound") {
+    .then((user) => {
+      if (user === null) {
         res.status(NOT_FOUND).send({ message: "Пользователь не найден" });
+        return;
+      }
+      return res.status(SUCCESS).send({ data: user });
+    })
+    .catch((err) => {
+      if (err.name === "ValidationError" || err.name === "CastError") {
+        res.status(VALIDATION_ERROR).send({
+          message: `Ошибка поиска пользователя, переданы некорректные данные: ${err}`,
+        });
         return;
       }
       res
@@ -52,11 +48,9 @@ module.exports.createUser = (req, res) => {
     .then((user) => res.status(SUCCESS_CREATED).send({ data: user }))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        res
-          .status(VALIDATION_ERROR)
-          .send({
-            message: `Ошибка создания пользователя, переданы некорректные данные: ${err}`,
-          });
+        res.status(VALIDATION_ERROR).send({
+          message: `Ошибка создания пользователя, переданы некорректные данные: ${err}`,
+        });
         return;
       }
       res
@@ -78,21 +72,18 @@ module.exports.updateUser = (req, res) => {
       upsert: true, // если пользователь не найден, он будет создан
     }
   )
-    .orFail(() => {
-      throw new UserNotFound();
-    })
-    .then((user) => res.status(SUCCESS).send({ data: user }))
+  .then((user) => {
+    if (user === null) {
+      res.status(NOT_FOUND).send({ message: "Пользователь не найден" });
+      return;
+    }
+    return res.status(SUCCESS).send({ data: user });
+  })
     .catch((err) => {
-      if (err.name === "ValidationError") {
-        res
-          .status(VALIDATION_ERROR)
-          .send({
-            message: `Ошибка обновления пользователя, переданы некорректные данные: ${err}`,
-          });
-        return;
-      }
-      if (err.name === "UserNotFound") {
-        res.status(NOT_FOUND).send({ message: "Пользователь не найден" });
+      if (err.name === "ValidationError" || err.name === "CastError") {
+        res.status(VALIDATION_ERROR).send({
+          message: `Ошибка обновления пользователя, переданы некорректные данные: ${err}`,
+        });
         return;
       }
       res
@@ -114,21 +105,18 @@ module.exports.updateAvatar = (req, res) => {
       upsert: true, // если пользователь не найден, он будет создан
     }
   )
-    .orFail(() => {
-      throw new UserNotFound();
-    })
-    .then((user) => res.status(SUCCESS).send({ data: user }))
-    .catch((err) => {
-      if (err.name === "ValidationError") {
-        res
-          .status(VALIDATION_ERROR)
-          .send({
-            message: `Ошибка обновления аватара, переданы некорректные данные: ${err}`,
-          });
+    .then((user) => {
+      if (user === null) {
+        res.status(NOT_FOUND).send({ message: "Пользователь не найден" });
         return;
       }
-      if (err.name === "UserNotFound") {
-        res.status(NOT_FOUND).send({ message: "Пользователь не найден" });
+      return res.status(SUCCESS).send({ data: user });
+    })
+    .catch((err) => {
+      if (err.name === "ValidationError" || err.name === "CastError") {
+        res.status(VALIDATION_ERROR).send({
+          message: `Ошибка обновления аватара, переданы некорректные данные: ${err}`,
+        });
         return;
       }
       res

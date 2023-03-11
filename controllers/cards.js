@@ -6,15 +6,6 @@ const VALIDATION_ERROR = 400;
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
 
-class CardNotFound extends Error {
-  constructor() {
-    super();
-    this.status = NOT_FOUND;
-    this.message = "Карточка не найдена";
-    this.name = this.constructor.name;
-  }
-}
-
 // Поиск всех карточек
 module.exports.findCards = (req, res) => {
   Card.find({})
@@ -28,13 +19,12 @@ module.exports.findCards = (req, res) => {
 
 // Создание новой карточки
 module.exports.createCard = (req, res) => {
-  console.log(req.user._id); // _id станет доступен
   const { name, link, owner } = req.body;
 
   Card.create({ name, link, owner })
     .then((card) => res.status(SUCCESS_CREATED).send({ data: card }))
     .catch((err) => {
-      if (err.name === "ValidationError") {
+      if (err.name === "ValidationError" || err.name === "CastError") {
         res
           .status(VALIDATION_ERROR)
           .send({
@@ -51,15 +41,14 @@ module.exports.createCard = (req, res) => {
 // Удаление карточки по идентификатору
 module.exports.deleteCardId = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .orFail(() => {
-      throw new CardNotFound();
-    })
-    .then((card) => res.status(SUCCESS).send({ data: card }))
-    .catch((err) => {
-      if (err.name === "CardNotFound") {
+    .then((card) => {
+      if (card === null) {
         res.status(NOT_FOUND).send({ message: "Карточка не найдена" });
         return;
       }
+      return res.status(SUCCESS).send({ data: card });
+    })
+    .catch((err) => {
       res
         .status(SERVER_ERROR)
         .send({ message: `На сервере произошла ошибка ${err}` });
@@ -73,19 +62,18 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true }
   )
-    .orFail(() => {
-      throw new CardNotFound();
+    .then((card) => {
+      if (card === null) {
+        res.status(NOT_FOUND).send({ message: "Карточка не найдена" });
+        return;
+      }
+      return res.status(SUCCESS).send({ data: card });
     })
-    .then((card) => res.status(SUCCESS).send({ data: card }))
     .catch((err) => {
-      if (err.name === "ValidationError") {
+      if (err.name === "ValidationError" || err.name === "CastError") {
         res
           .status(VALIDATION_ERROR)
           .send({ message: `Переданы некорректные данные: ${err}` });
-        return;
-      }
-      if (err.name === "CardNotFound") {
-        res.status(NOT_FOUND).send({ message: "Карточка не найдена" });
         return;
       }
       res
@@ -101,19 +89,18 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true }
   )
-    .orFail(() => {
-      throw new CardNotFound();
+    .then((card) => {
+      if (card === null) {
+        res.status(NOT_FOUND).send({ message: "Карточка не найдена" });
+        return;
+      }
+      return res.status(SUCCESS).send({ data: card });
     })
-    .then((card) => res.status(SUCCESS).send({ data: card }))
     .catch((err) => {
-      if (err.name === "ValidationError") {
+      if (err.name === "ValidationError" || err.name === "CastError") {
         res
           .status(VALIDATION_ERROR)
           .send({ message: `Переданы некорректные данные: ${err}` });
-        return;
-      }
-      if (err.name === "CardNotFound") {
-        res.status(NOT_FOUND).send({ message: "Карточка не найдена" });
         return;
       }
       res
