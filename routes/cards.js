@@ -8,11 +8,11 @@ const {
   dislikeCard,
 } = require("../controllers/cards");
 
-router.get("/cards", findCards);
-router.post("/cards", createCard);
-router.delete("/cards/:cardId", deleteCardId);
+router.get("/", findCards);
+router.post("/", createCard);
+router.delete("/:cardId", deleteCardId);
 
-router.put("/cards/:cardId/likes", likeCard); // поставить лайк карточке
-router.delete("/cards/:cardId/likes", dislikeCard); // убрать лайк с карточки
+router.put("/:cardId/likes", likeCard); // поставить лайк карточке
+router.delete("/:cardId/likes", dislikeCard); // убрать лайк с карточки
 
 module.exports = router; // экспортировали роутер

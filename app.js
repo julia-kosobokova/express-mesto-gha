@@ -1,16 +1,16 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const routerUsers = require("./routes/users");
-const routerCards = require("./routes/cards");
-const bodyParser = require("body-parser");
+const router = require("./routes");
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
 
 const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+const NOT_FOUND = 404;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   req.user = {
@@ -20,11 +20,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/", routerUsers);
-app.use("/", routerCards);
+app.use("/", router);
 app.use((req, res) => {
   res
-    .status(404)
+    .status(NOT_FOUND)
     .send({ message: "Страница по указанному маршруту не найдена" });
 });
 

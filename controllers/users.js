@@ -7,7 +7,7 @@ const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
 
 // Поиск всех пользователей
-module.exports.findUsers = (req, res) => {
+const findUsers = (req, res) => {
   User.find({})
     .then((user) => res.status(SUCCESS).send({ data: user }))
     .catch((err) =>
@@ -18,7 +18,7 @@ module.exports.findUsers = (req, res) => {
 };
 
 // Поиск пользователя по Id
-module.exports.findUserId = (req, res) => {
+const findUserId = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user === null) {
@@ -28,7 +28,7 @@ module.exports.findUserId = (req, res) => {
       return res.status(SUCCESS).send({ data: user });
     })
     .catch((err) => {
-      if (err.name === "ValidationError" || err.name === "CastError") {
+      if (err.name === "CastError") {
         res.status(VALIDATION_ERROR).send({
           message: `Ошибка поиска пользователя, переданы некорректные данные: ${err}`,
         });
@@ -41,7 +41,7 @@ module.exports.findUserId = (req, res) => {
 };
 
 // Создание нового пользователя
-module.exports.createUser = (req, res) => {
+const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
 
   User.create({ name, about, avatar })
@@ -60,7 +60,7 @@ module.exports.createUser = (req, res) => {
 };
 
 // Обновление профиля
-module.exports.updateUser = (req, res) => {
+const updateUser = (req, res) => {
   const { name, about } = req.body;
   // обновим имя и описание найденного по _id пользователя
   User.findByIdAndUpdate(
@@ -69,7 +69,6 @@ module.exports.updateUser = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-      upsert: true, // если пользователь не найден, он будет создан
     }
   )
     .then((user) => {
@@ -80,7 +79,7 @@ module.exports.updateUser = (req, res) => {
       return res.status(SUCCESS).send({ data: user });
     })
     .catch((err) => {
-      if (err.name === "ValidationError" || err.name === "CastError") {
+      if (err.name === "CastError") {
         res.status(VALIDATION_ERROR).send({
           message: `Ошибка обновления пользователя, переданы некорректные данные: ${err}`,
         });
@@ -93,7 +92,7 @@ module.exports.updateUser = (req, res) => {
 };
 
 // Обновление аватара
-module.exports.updateAvatar = (req, res) => {
+const updateAvatar = (req, res) => {
   const { avatar } = req.body;
   // обновим аватар найденного по _id пользователя
   User.findByIdAndUpdate(
@@ -102,7 +101,6 @@ module.exports.updateAvatar = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-      upsert: true, // если пользователь не найден, он будет создан
     }
   )
     .then((user) => {
@@ -123,4 +121,11 @@ module.exports.updateAvatar = (req, res) => {
         .status(SERVER_ERROR)
         .send({ message: `На сервере произошла ошибка ${err}` });
     });
+};
+module.exports = {
+  findUsers,
+  findUserId,
+  createUser,
+  updateUser,
+  updateAvatar,
 };

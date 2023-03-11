@@ -8,11 +8,11 @@ const {
   updateAvatar,
 } = require("../controllers/users");
 
-router.get("/users", findUsers);
-router.get("/users/:userId", findUserId);
-router.post("/users", createUser);
+router.get("/", findUsers);
+router.get("/:userId", findUserId);
+router.post("/", createUser);
 
-router.patch("/users/me", updateUser); // обновляет профиль
-router.patch("/users/me/avatar", updateAvatar); // обновляет аватар
+router.patch("/me", updateUser); // обновляет профиль
+router.patch("/me/avatar", updateAvatar); // обновляет аватар
 
 module.exports = router; // экспортировали роутер
