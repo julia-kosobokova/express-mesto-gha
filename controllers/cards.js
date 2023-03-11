@@ -31,7 +31,7 @@ const createCard = (req, res) => {
         .then((card) => res.status(SUCCESS_CREATED).send({ data: card }));
     })
     .catch((err) => {
-      if (err.name === "CastError") {
+      if (err.name === "ValidationError") {
         res.status(VALIDATION_ERROR).send({
           message: `Ошибка создания карточки, переданы некорректные данные: ${err}`,
         });
@@ -111,7 +111,7 @@ const dislikeCard = (req, res) => {
       return res.status(SUCCESS).send({ data: card });
     })
     .catch((err) => {
-      if (err.name === "ValidationError" || err.name === "CastError") {
+      if (err.name === "CastError") {
         res
           .status(VALIDATION_ERROR)
           .send({ message: `Переданы некорректные данные: ${err}` });
