@@ -19,7 +19,8 @@ module.exports.findCards = (req, res) => {
 
 // Создание новой карточки
 module.exports.createCard = (req, res) => {
-  const { name, link, owner } = req.body;
+  const { name, link } = req.body;
+  const owner=req.user._id;
 
   Card.create({ name, link, owner })
     .then((card) => res.status(SUCCESS_CREATED).send({ data: card }))
