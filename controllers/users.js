@@ -72,13 +72,13 @@ module.exports.updateUser = (req, res) => {
       upsert: true, // если пользователь не найден, он будет создан
     }
   )
-  .then((user) => {
-    if (user === null) {
-      res.status(NOT_FOUND).send({ message: "Пользователь не найден" });
-      return;
-    }
-    return res.status(SUCCESS).send({ data: user });
-  })
+    .then((user) => {
+      if (user === null) {
+        res.status(NOT_FOUND).send({ message: "Пользователь не найден" });
+        return;
+      }
+      return res.status(SUCCESS).send({ data: user });
+    })
     .catch((err) => {
       if (err.name === "ValidationError" || err.name === "CastError") {
         res.status(VALIDATION_ERROR).send({

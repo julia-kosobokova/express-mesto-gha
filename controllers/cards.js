@@ -20,17 +20,15 @@ module.exports.findCards = (req, res) => {
 // Создание новой карточки
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
-  const owner=req.user._id;
+  const owner = req.user._id;
 
   Card.create({ name, link, owner })
     .then((card) => res.status(SUCCESS_CREATED).send({ data: card }))
     .catch((err) => {
       if (err.name === "ValidationError" || err.name === "CastError") {
-        res
-          .status(VALIDATION_ERROR)
-          .send({
-            message: `Ошибка создания карточки, переданы некорректные данные: ${err}`,
-          });
+        res.status(VALIDATION_ERROR).send({
+          message: `Ошибка создания карточки, переданы некорректные данные: ${err}`,
+        });
         return;
       }
       res
