@@ -109,7 +109,7 @@ const updateAvatar = (req, res) => {
       res.status(SUCCESS).send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         res.status(VALIDATION_ERROR).send({
           message: `Ошибка обновления аватара, переданы некорректные данные: ${err}`,
         });
