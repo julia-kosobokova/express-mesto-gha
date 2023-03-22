@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const router = require('./routes');
 
+const { login, createUser} = require('./controllers/users');
+
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
 
@@ -21,6 +23,10 @@ app.use((req, res, next) => {
 });
 
 app.use('/', router);
+
+app.post('/signin', login);
+app.post('/signup', createUser);
+
 app.use((req, res) => {
   res
     .status(NOT_FOUND)

@@ -1,3 +1,6 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 const User = require('../models/user');
 
 const SUCCESS = 200;
@@ -10,9 +13,9 @@ const SERVER_ERROR = 500;
 const findUsers = (req, res) => {
   User.find({})
     .then((user) => res.status(SUCCESS).send({ data: user }))
-    .catch((err) => res
-      .status(SERVER_ERROR)
-      .send({ message: `На сервере произошла ошибка ${err}` }));
+    .catch((err) =>
+      res.status(SERVER_ERROR).send({ message: `На сервере произошла ошибка ${err}` })
+    );
 };
 
 // Поиск пользователя по Id
@@ -40,9 +43,11 @@ const findUserId = (req, res) => {
 
 // Создание нового пользователя
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+  const { name, about, avatar, email, password } = req.body;
 
-  User.create({ name, about, avatar })
+  bcrypt
+    .hash(password, 10)
+    .then((hash) => User.create({ name, about, avatar, email, password: hash }))
     .then((user) => res.status(SUCCESS_CREATED).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -67,7 +72,7 @@ const updateUser = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-    },
+    }
   )
     .then((user) => {
       if (user === null) {
@@ -99,7 +104,7 @@ const updateAvatar = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-    },
+    }
   )
     .then((user) => {
       if (user === null) {
@@ -120,10 +125,39 @@ const updateAvatar = (req, res) => {
         .send({ message: `На сервере произошла ошибка ${err}` });
     });
 };
+
+// Проверка почты и пароля пользователя
+const login = (req, res) => {
+  const { email, password } = req.body;
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+
+      return bcrypt.compare(password, user.password);
+    })
+    .then((matched) => {
+      if (!matched) {
+        // хеши не совпали — отклоняем промис
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+      // аутентификация успешна
+      res.send({ token: jwt.sign({ _id: 'd285e3dceed844f902650f40' }, 'super-strong-secret', {expiresIn: '7d'}) });
+    })
+
+    .catch((err) => {
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
+};
+
 module.exports = {
   findUsers,
   findUserId,
   createUser,
   updateUser,
   updateAvatar,
+  login,
 };
