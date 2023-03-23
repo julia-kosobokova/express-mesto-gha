@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const router = require('./routes');
 
 const { login, createUser} = require('./controllers/users');
+const auth = require('./middlewares/auth');
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
@@ -22,10 +23,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/', router);
-
+// Роуты, которым не нужна авторизация
 app.post('/signin', login);
 app.post('/signup', createUser);
+
+app.use(auth);
+app.use('/', router); // Роуты, которым нужна авторизация
 
 app.use((req, res) => {
   res

@@ -143,7 +143,7 @@ const login = (req, res) => {
         return Promise.reject(new Error('Неправильные почта или пароль'));
       }
       // аутентификация успешна
-      res.send({ token: jwt.sign({ _id: 'd285e3dceed844f902650f40' }, 'super-strong-secret', {expiresIn: '7d'}) });
+      res.send({ token: jwt.sign({ _id: 'd285e3dceed844f902650f40' }, 'super-strong-secret', { expiresIn: '7d' }) });
     })
 
     .catch((err) => {
@@ -153,11 +153,24 @@ const login = (req, res) => {
     });
 };
 
+// Получение информации о текущем пользователе
+const getCurrentUser = (req, res, next) => {
+  const {name, email} = req.user;
+  console.log(name);
+  User
+  .findById(user._id)
+  //.orFail(() => res.status(404).send({message: 'Пользователь не найден'}))
+  .then((user) => res.send({data:user}))
+  .catch(next);
+  //res.send(req.user);
+};
+
 module.exports = {
   findUsers,
   findUserId,
-  createUser,
   updateUser,
   updateAvatar,
+  getCurrentUser,
+  createUser,
   login,
 };
