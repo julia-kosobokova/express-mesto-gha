@@ -2,6 +2,7 @@ const Card = require('../models/card');
 
 const { NotFoundError } = require('../errors/not-found-error');
 const { ValidationError } = require('../errors/validation-error');
+const { ForbiddenError } = require('../errors/forbidden-error');
 
 const SUCCESS = 200;
 const SUCCESS_CREATED = 201;
@@ -33,16 +34,17 @@ const createCard = (req, res, next) => {
 
 // Удаление карточки по идентификатору
 const deleteCardId = (req, res, next) => {
-  Card.findOneAndRemove({
-    _id: req.params.cardId,
-    owner: req.user._id,
-  })
+  Card.findById(req.params.cardId)
     .populate(['owner', 'likes'])
     .then((card) => {
       if (card === null) {
         throw new NotFoundError('Карточка не найдена');
       }
-      res.status(SUCCESS).send({ data: card });
+      if (card.owner !== req.user._id) {
+        throw new ForbiddenError('Удаление чужой карточки не допускается');
+      }
+      card.deleteOne()
+        .then((data) => res.status(SUCCESS).send({ data }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {

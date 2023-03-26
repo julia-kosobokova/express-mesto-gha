@@ -22,7 +22,7 @@ router.get('/', findUsers);
 
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string(),
+    avatar: Joi.string().regex(/https?:\/\/(www\.)?[\w\-.]+\.\w{2,}([\w\-._~:/?#[\]@!$&'()*+,;=]+)?/),
   }),
 }), updateAvatar); // обновляет аватар
 
