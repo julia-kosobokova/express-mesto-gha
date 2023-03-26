@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { celebrate, Joi } = require('celebrate');
 
 const {
   findUsers,
@@ -9,10 +10,27 @@ const {
 } = require('../controllers/users');
 
 router.get('/me', getCurrentUser); // возвращает информацию о текущем пользователе
-router.get('/:userId', findUserId);
+
+router.get('/:userId', celebrate({
+  // валидируем параметры
+  params: Joi.object().keys({
+    userId: Joi.string().alphanum().length(24),
+  }),
+}), findUserId);
+
 router.get('/', findUsers);
 
-router.patch('/me/avatar', updateAvatar); // обновляет аватар
-router.patch('/me', updateUser); // обновляет профиль
+router.patch('/me/avatar', celebrate({
+  body: Joi.object().keys({
+    avatar: Joi.string(),
+  }),
+}), updateAvatar); // обновляет аватар
+
+router.patch('/me', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+  }),
+}), updateUser); // обновляет профиль
 
 module.exports = router; // экспортировали роутер

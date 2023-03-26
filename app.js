@@ -6,6 +6,7 @@ const { login, createUser} = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { NotFoundError } = require('./errors/not-found-error');
 const { errorHandler } = require('./middlewares/error-handler');
+const { celebrate, Joi } = require('celebrate');
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
@@ -22,8 +23,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Роуты, которым не нужна авторизация
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required(),
+    password: Joi.string().required().min(8),
+  }),
+}), login);
+
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string(),
+    email: Joi.string().required(),
+    password: Joi.string().required().min(8),
+  }),
+}), createUser);
 
 app.use(auth);
 app.use('/', router); // Роуты, которым нужна авторизация
