@@ -22,14 +22,14 @@ const createCard = (req, res, next) => {
 
   Card.create({ name, link, owner })
 
-    .then((card) => card.populate(['owner', 'likes']).then((data) => res.status(SUCCESS_CREATED).send({ data })))
+    .then((card) => card.populate(['owner']).then((data) => res.status(SUCCESS_CREATED).send({ data })))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError(`Ошибка создания карточки, переданы некорректные данные: ${err}`);
+        next(new ValidationError(`Ошибка создания карточки, переданы некорректные данные: ${err}`));
+        return;
       }
       next(err);
-    })
-    .catch(next);
+    });
 };
 
 // Удаление карточки по идентификатору
@@ -38,21 +38,23 @@ const deleteCardId = (req, res, next) => {
     .populate(['owner', 'likes'])
     .then((card) => {
       if (card === null) {
-        throw new NotFoundError('Карточка не найдена');
+        next(new NotFoundError('Карточка не найдена'));
+        return;
       }
       if (card.owner._id.toString() !== req.user._id) {
-        throw new ForbiddenError('Удаление чужой карточки не допускается');
+        next(new ForbiddenError('Удаление чужой карточки не допускается'));
+        return;
       }
       card.deleteOne()
         .then((data) => res.status(SUCCESS).send({ data }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new ValidationError(`Переданы некорректные данные: ${err}`);
+        next(new ValidationError(`Переданы некорректные данные: ${err}`));
+        return;
       }
       next(err);
-    })
-    .catch(next);
+    });
 };
 
 // Поставить лайк карточке
@@ -65,17 +67,18 @@ const likeCard = (req, res, next) => {
     .populate(['owner', 'likes'])
     .then((card) => {
       if (card === null) {
-        throw new NotFoundError('Карточка не найдена');
+        next(new NotFoundError('Карточка не найдена'));
+        return;
       }
       res.status(SUCCESS).send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new ValidationError(`Переданы некорректные данные: ${err}`);
+        next(new ValidationError(`Переданы некорректные данные: ${err}`));
+        return;
       }
       next(err);
-    })
-    .catch(next);
+    });
 };
 
 // Убрать лайк с карточки
@@ -88,17 +91,18 @@ const dislikeCard = (req, res, next) => {
     .populate(['owner', 'likes'])
     .then((card) => {
       if (card === null) {
-        throw new NotFoundError('Карточка не найдена');
+        next(new NotFoundError('Карточка не найдена'));
+        return;
       }
       res.status(SUCCESS).send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new ValidationError(`Переданы некорректные данные: ${err}`);
+        next(new ValidationError(`Переданы некорректные данные: ${err}`));
+        return;
       }
       next(err);
-    })
-    .catch(next);
+    });
 };
 
 module.exports = {

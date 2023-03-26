@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { URL_VALIDATION_RX } = require('../const');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -12,7 +13,7 @@ const cardSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (v) => {
-        const rx = /https?:\/\/(www\.)?[\w\-.]+\.\w{2,}([\w\-._~:/?#[\]@!$&'()*+,;=]+)?/g;
+        const rx = URL_VALIDATION_RX;
         return rx.test(v);
       },
       message: (props) => `${props.value} is not a valid URL!`,

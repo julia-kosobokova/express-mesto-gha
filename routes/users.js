@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
+const { URL_VALIDATION_RX } = require('../const');
 
 const {
   findUsers,
@@ -14,7 +15,7 @@ router.get('/me', getCurrentUser); // возвращает информацию 
 router.get('/:userId', celebrate({
   // валидируем параметры
   params: Joi.object().keys({
-    userId: Joi.string().alphanum().length(24),
+    userId: Joi.string().required().hex().length(24),
   }),
 }), findUserId);
 
@@ -22,14 +23,14 @@ router.get('/', findUsers);
 
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().regex(/https?:\/\/(www\.)?[\w\-.]+\.\w{2,}([\w\-._~:/?#[\]@!$&'()*+,;=]+)?/),
+    avatar: Joi.string().required().regex(URL_VALIDATION_RX),
   }),
 }), updateAvatar); // обновляет аватар
 
 router.patch('/me', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
+    name: Joi.string().required().min(2).max(30),
+    about: Joi.string().required().min(2).max(30),
   }),
 }), updateUser); // обновляет профиль
 

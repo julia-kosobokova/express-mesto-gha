@@ -22,17 +22,18 @@ const findUserId = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user === null) {
-        throw new NotFoundError('Нет пользователя с таким id');
+        next(new NotFoundError('Нет пользователя с таким id'));
+        return;
       }
       res.status(SUCCESS).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new ValidationError(`Ошибка поиска пользователя, переданы некорректные данные: ${err}`);
+        next(new ValidationError(`Ошибка поиска пользователя, переданы некорректные данные: ${err}`));
+        return;
       }
       next(err);
-    })
-    .catch(next);
+    });
 };
 
 // Создание нового пользователя
@@ -65,14 +66,15 @@ const createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError(`Ошибка создания пользователя, переданы некорректные данные: ${err}`);
+        next(new ValidationError(`Ошибка создания пользователя, переданы некорректные данные: ${err}`));
+        return;
       }
       if (err.code === 11000) {
-        throw new ConflictError('Пользователь с таким email уже существует');
+        next(new ConflictError('Пользователь с таким email уже существует'));
+        return;
       }
       next(err);
-    })
-    .catch(next);
+    });
 };
 
 // Обновление профиля
@@ -89,17 +91,18 @@ const updateUser = (req, res, next) => {
   )
     .then((user) => {
       if (user === null) {
-        throw new NotFoundError('Пользователь не найден');
+        next(new NotFoundError('Пользователь не найден'));
+        return;
       }
       res.status(SUCCESS).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError(`Ошибка обновления пользователя, переданы некорректные данные: ${err}`);
+        next(new ValidationError(`Ошибка обновления пользователя, переданы некорректные данные: ${err}`));
+        return;
       }
       next(err);
-    })
-    .catch(next);
+    });
 };
 
 // Обновление аватара
@@ -116,17 +119,18 @@ const updateAvatar = (req, res, next) => {
   )
     .then((user) => {
       if (user === null) {
-        throw new NotFoundError('Пользователь не найден');
+        next(new NotFoundError('Пользователь не найден'));
+        return;
       }
       res.status(SUCCESS).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError(`Ошибка обновления аватара, переданы некорректные данные: ${err}`);
+        next(new ValidationError(`Ошибка обновления аватара, переданы некорректные данные: ${err}`));
+        return;
       }
       next(err);
-    })
-    .catch(next);
+    });
 };
 
 const login = (req, res, next) => {
@@ -134,12 +138,13 @@ const login = (req, res, next) => {
 
   User
     .findOne({ email }).select('+password')
-    .orFail(() => { throw new UnauthorizedError('Пользователь не найден'); })
+    .orFail(() => { throw new UnauthorizedError('Неправильные имя пользователя или пароль'); })
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
       if (matched) {
         return user;
       }
-      throw new UnauthorizedError('Пользователь не найден');
+      next(new UnauthorizedError('Неправильные имя пользователя или пароль'));
+      return user;
     }))
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '7d' });
