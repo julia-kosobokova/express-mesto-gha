@@ -1,12 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { celebrate, Joi } = require('celebrate');
+const { errors } = require('celebrate');
 const router = require('./routes');
 
-const { login, createUser} = require('./controllers/users');
+const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { NotFoundError } = require('./errors/not-found-error');
 const { errorHandler } = require('./middlewares/error-handler');
-const { celebrate, Joi } = require('celebrate');
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
@@ -47,6 +48,7 @@ app.use(() => {
   throw new NotFoundError('Страница по указанному маршруту не найдена');
 });
 
+app.use(errors()); // обработчик ошибок celebrate
 app.use(errorHandler);
 
 app.listen(PORT, () => {
