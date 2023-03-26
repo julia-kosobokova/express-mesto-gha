@@ -5,6 +5,7 @@ const User = require('../models/user');
 const { NotFoundError } = require('../errors/not-found-error');
 const { ValidationError } = require('../errors/validation-error');
 const { ConflictError } = require('../errors/conflict-error');
+const { UnauthorizedError } = require('../errors/unauthorized-error');
 
 const SUCCESS = 200;
 const SUCCESS_CREATED = 201;
@@ -53,7 +54,15 @@ const createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => res.status(SUCCESS_CREATED).send({ data: user }))
+    .then((user) => res.status(SUCCESS_CREATED).send({
+      data: {
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      },
+    }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         throw new ValidationError(`Ошибка создания пользователя, переданы некорректные данные: ${err}`);
@@ -125,12 +134,12 @@ const login = (req, res, next) => {
 
   User
     .findOne({ email }).select('+password')
-    .orFail(() => { throw new NotFoundError('Пользователь не найден'); })
+    .orFail(() => { throw new UnauthorizedError('Пользователь не найден'); })
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
       if (matched) {
         return user;
       }
-      throw new NotFoundError('Пользователь не найден');
+      throw new UnauthorizedError('Пользователь не найден');
     }))
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '7d' });
