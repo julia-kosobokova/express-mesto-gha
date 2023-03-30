@@ -38,22 +38,20 @@ const deleteCardId = (req, res, next) => {
     .populate(['owner', 'likes'])
     .then((card) => {
       if (card === null) {
-        next(new NotFoundError('Карточка не найдена'));
-        return;
+        return next(new NotFoundError('Карточка не найдена'));
       }
       if (card.owner._id.toString() !== req.user._id) {
-        next(new ForbiddenError('Удаление чужой карточки не допускается'));
-        return;
+        return next(new ForbiddenError('Удаление чужой карточки не допускается'));
       }
       card.deleteOne()
         .then((data) => res.status(SUCCESS).send({ data }));
+      return next();
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new ValidationError(`Переданы некорректные данные: ${err}`));
-        return;
+        return next(new ValidationError(`Переданы некорректные данные: ${err}`));
       }
-      next(err);
+      return next(err);
     });
 };
 
